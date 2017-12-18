@@ -1,0 +1,18 @@
+[MASTER]
+
+ignore=CVS
+jobs=1
+persistent=yes
+
+[MESSAGES CONTROL]
+
+disable=missing-docstring
+
+[BASIC]
+
+good-names=e,ex,f,i,j,k,n,_
+
+[FORMAT]
+
+indent-string='    '
+max-line-length=80

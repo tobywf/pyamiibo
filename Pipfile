@@ -1,0 +1,27 @@
+[[source]]
+
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+
+cryptography = "*"
+
+[dev-packages]
+
+ipython = "*"
+flake8 = "*"
+isort = "*"
+flake8-bugbear = "*"
+flake8-builtins = "*"
+flake8-comprehensions = "*"
+flake8-isort = "*"
+flake8-pep3101 = "*"
+sphinx = "*"
+pylint = "*"
+sphinx_rtd_theme = "*"
+
+[requires]
+
+python_version = "3"
