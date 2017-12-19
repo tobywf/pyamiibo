@@ -1,7 +1,8 @@
 """PyAmiibo is a library for manipulating Amiibo dumps."""
-from setuptools import setup
 import os.path
 import sys
+
+from setuptools import setup
 
 readme_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'README.rst'))
 with open(readme_path, encoding='utf-8') as f:
@@ -9,7 +10,7 @@ with open(readme_path, encoding='utf-8') as f:
 
 setup(
     name='pyamiibo',
-    version='0.1',
+    version='0.2',
     description=__doc__,
     long_description=readme,
     author='Toby Fleming',
@@ -19,6 +20,9 @@ setup(
     packages=['amiibo'],
     install_requires=['cryptography'],
     zip_safe=True,
+    entry_points={
+        'console_scripts': ['amiibo = amiibo.cli:main']
+    },
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',

@@ -23,8 +23,8 @@ description = '{} Documentation'.format(project)
 copyright = '2017, Toby Fleming'
 author = 'Toby Fleming'
 
-version = '0.1'
-release = '0.1.0'
+version = '0.2'
+release = '0.2.0'
 
 language = None
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']

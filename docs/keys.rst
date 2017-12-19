@@ -7,9 +7,9 @@ Master keys
 
 The keys are commonly called ``unfixed-info.bin`` (data key) and ``locked-secret.bin`` (tag key). Occasionally, these keys are joined for easier loading:
 
-.. code-block:: bash
+.. code-block:: console
 
-    cat unfixed-info.bin locked-secret.bin > key.bin
+    $ cat unfixed-info.bin locked-secret.bin > key.bin
 
 These are binary files of 80 bytes each. Sometimes, they are distributed as hexadecimal bytes separated by spaces (e.g. ``F1 A3 65 ..`` etc). PyAmiibo can also parse this data into binary.
 

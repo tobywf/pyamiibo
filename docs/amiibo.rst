@@ -15,7 +15,7 @@ Password protection
 
 NTAG215 offers password protection for memory access, which is used for Amiibos. The password is derived from the tag's 7 byte UID:
 
-.. code-block:: python
+.. code-block:: python3
 
     pw[0] = 0xAA ^ uid[1] ^ uid[3]
     pw[1] = 0x55 ^ uid[2] ^ uid[4]
