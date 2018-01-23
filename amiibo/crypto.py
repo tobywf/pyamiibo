@@ -5,6 +5,7 @@ from itertools import chain
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
+from .countries import COUNTRY_CODES
 from .ntag import NTAG215
 
 BACKEND = default_backend()
@@ -310,3 +311,100 @@ class AmiiboDump(NTAG215):
             0x55 ^ uid[4] ^ uid[6],
         ])
         self.password_ack = b'\x80\x80'
+
+    @property
+    def character_id(self):
+        return (self.data[0x058] << 8) | (self.data[0x059])
+
+    @character_id.setter
+    def character_id(self, char_id):
+        if char_id < 0 or char_id > 0xFFFF:
+            raise ValueError
+        self.data[0x058] = (char_id >> 8) & 0xFF
+        self.data[0x059] = (char_id >> 0) & 0xFF
+
+    @property
+    def game_series(self):
+        # ugh, nibbles
+        return (self.data[0x054] << 4) | (self.data[0x055] >> 4)
+
+    @game_series.setter
+    def game_series(self, series):
+        if series < 0 or series > 0xFFF:
+            raise ValueError
+        # ugh, nibbles
+        self.data[0x054] = series >> 4
+        self.data[0x055] = ((series & 0xF) << 4) | (self.data[0x055] & 0xF)
+
+    @property
+    def character_index(self):
+        # ugh, nibbles
+        return self.data[0x055] & 0xF
+
+    @character_index.setter
+    def character_index(self, index):
+        if index < 0 or index > 0xF:
+            raise ValueError
+        # ugh, nibbles
+        self.data[0x055] = (self.data[0x055] & 0xF0) | index
+
+    @property
+    def amiibo_nickname(self):
+        # TODO: why is the Amiibo nickname big endian,
+        # but the Mii nickname litle endian?
+        return self.data[0x020:0x034].decode('utf-16-be').rstrip('\x00')
+
+    @amiibo_nickname.setter
+    def amiibo_nickname(self, name):
+        utf16 = name.encode('utf-16-be')
+        if len(utf16) > 20:
+            raise ValueError
+        self.data[0x020:0x034] = utf16.ljust(20, b'\x00')
+
+    @property
+    def owner_nickname(self):
+        # TODO: why is the Amiibo nickname big endian,
+        # but the Mii nickname litle endian?
+        return self.data[0x0BA:0x0CE].decode('utf-16-le').rstrip('\x00')
+
+    @owner_nickname.setter
+    def owner_nickname(self, name):
+        utf16 = name.encode('utf-16-le')
+        if len(utf16) > 20:
+            raise ValueError
+        self.data[0x0BA:0x0CE] = utf16.ljust(20, b'\x00')
+
+    @property
+    def write_counter(self):
+        return (self.data[0x108] << 8) | self.data[0x109]
+
+    @write_counter.setter
+    def write_counter(self, counter):
+        if counter < 0 or counter > 0xFFFF:
+            raise ValueError
+        self.data[0x108] = (counter >> 8) & 0xFF
+        self.data[0x109] = (counter >> 0) & 0xFF
+
+    @property
+    def app_id(self):
+        return self.data[0x10a:0x10e]
+
+    @app_id.setter
+    def app_id(self, value):
+        if len(value) != 4:
+            raise ValueError
+        self.data[0x10a:0x10e] = value
+
+    @property
+    def country_code(self):
+        return self.data[0x015]
+
+    @country_code.setter
+    def country_code(self, code):
+        if code < 0 or code > 0xFF:
+            raise ValueError
+        self.data[0x015] = code
+
+    @property
+    def country_name(self):
+        return COUNTRY_CODES.get(self.country_code, 'Unknown')

@@ -6,6 +6,11 @@ class NTAGUIDError(Exception):
     pass
 
 
+class NTAGCounterError(Exception):
+    """Raised if the NFC counter is read but it is not enabled."""
+    pass
+
+
 class MirrorConf(Enum):
     """Possible configurations for the ASCII mirror function.
     (8.7 ASCII mirror function)
@@ -414,7 +419,7 @@ class NTAGBase:
         self.data[self.DYN_OFFSET + 8] = access
 
     @property
-    def nfc_counter(self):
+    def nfc_counter_enabled(self):
         """Gets or sets whether the NFC counter is enabled.
         (8.6 NFC counter function)
 
@@ -422,8 +427,8 @@ class NTAGBase:
         access = self.data[self.DYN_OFFSET + 8]
         return bit_test(access, 4)
 
-    @nfc_counter.setter
-    def nfc_counter(self, enabled):
+    @nfc_counter_enabled.setter
+    def nfc_counter_enabled(self, enabled):
         access = self.data[self.DYN_OFFSET + 8]
         access = bit_set(access, 4, enabled)
         self.data[self.DYN_OFFSET + 8] = access
@@ -442,6 +447,52 @@ class NTAGBase:
         access = self.data[self.DYN_OFFSET + 8]
         access = bit_set(access, 3, enabled)
         self.data[self.DYN_OFFSET + 8] = access
+
+    def _validate_nfc_counter(self):
+        conf = self.mirror_conf
+        if conf == MirrorConf.CTR_ASCII_MIRROR:
+            size = 6
+            skip = 0
+        elif conf == MirrorConf.BOTH_ASCII_MIRROR:
+            size = 21
+            skip = 15
+        else:
+            raise NTAGCounterError('Counter mirror not enabled')
+
+        offset = self.mirror_offset
+        if offset < 4 * NTAGBase.PAGE_SIZE:
+            raise NTAGCounterError('Counter mirror offset invalid')
+
+        if offset > self.DYN_OFFSET - size:
+            raise NTAGCounterError('Counter mirror offset invalid')
+
+        return offset + skip
+
+    @property
+    def nfc_counter_value(self):
+        """Gets or sets the NFC counter value.
+        (8.6 NFC counter function)
+
+        Since we only have the dump, not the tag to issue ``READ_CNT``,
+        the ASCII mirror of the NFC counter must have been enabled.
+
+        This property converts the ASCII NFC counter value to an integer.
+
+        :raises NTAGCounterError: If the ASCII mirror is not configured to
+            mirror the NFC counter (either :attr:`MirrorConf.CTR_ASCII_MIRROR`
+            or :attr:`MirrorConf.BOTH_ASCII_MIRROR`), or the offset determined
+            by the mirror page and mirror byte is invalid.
+        """
+        offset = self._validate_nfc_counter()
+        ascii_mirror = self.data[offset:offset + 6].decode('ascii')
+        return int(ascii_mirror, 16)
+
+    @nfc_counter_value.setter
+    def nfc_counter_value(self, counter):
+        if counter < 0 or counter > 0xFFFFFF:
+            raise ValueError
+        offset = self._validate_nfc_counter()
+        self.data[offset:offset + 6] = '{:06X}'.format(counter).encode('ascii')
 
     @property
     def authentication_limit(self):
